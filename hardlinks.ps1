@@ -47,7 +47,7 @@ function ReadHostTillValidValue {
     return $result
 }
 
-Clear-Variable -Name minecraftInstancePath, symlinkTargetsPath, ignorePowershellDirectory, createCopyOfDirectorys, deleteOldDirectorys, directoryNameBlacklist
+Clear-Variable -Name minecraftInstancePath, symlinkTargetsPath, ignorePowershellDirectory, createCopyOfDirectorys, deleteOldDirectorys, directoryNameBlacklist -ErrorAction Ignore
 
 $minecraftInstancePath = ReadHostTillValidValue -text "Please paste minecraft instance directory here" -inputType path
 $symlinkTargetsPath = ReadHostTillValidValue -text "Please paste the directory containing the symlink target directorys" -inputType path
