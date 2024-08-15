@@ -1,7 +1,0 @@
-<?xml version="1.0"?>
-<configuration>
-  <symlinkTargetsPath>C:\Nextcloud\Quentin\Dokumente\Minecraft</symlinkTargetsPath>
-  <ignorePowershellDirectory>True</ignorePowershellDirectory>
-  <createCopyOfDirectorys>True</createCopyOfDirectorys>
-  <deleteOldDirectorys>True</deleteOldDirectorys>
-</configuration>
