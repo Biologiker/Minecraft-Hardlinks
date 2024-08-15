@@ -47,13 +47,30 @@ function ReadHostTillValidValue {
     return $result
 }
 
-Clear-Variable -Name minecraftInstancePath, symlinkTargetsPath, ignorePowershellDirectory, createCopyOfDirectorys, deleteOldDirectorys, directoryNameBlacklist -ErrorAction Ignore
+$doLoadFromConfig = $false
+
+if (Test-Path .\config.xml) {
+    $doLoadFromConfig = ReadHostTillValidValue -text "Load last configuration from file? (y/n)" -inputType boolean
+}
 
 $minecraftInstancePath = ReadHostTillValidValue -text "Please paste minecraft instance directory here" -inputType path
-$symlinkTargetsPath = ReadHostTillValidValue -text "Please paste the directory containing the symlink target directorys" -inputType path
-$ignorePowershellDirectory = ReadHostTillValidValue -text "Should the powershell directory be ignored? (y/n)" -inputType boolean
-$createCopyOfDirectorys = ReadHostTillValidValue -text "Create copys of old Directorys? (y/n)" -inputType boolean
-$deleteOldDirectorys = ReadHostTillValidValue -text "Automatically delete the old directorys? (Otherwise you have to delete them yourself.) (y/n)" -inputType boolean
+
+if ($doLoadFromConfig) {
+    # Load XML from a file
+    [XML]$xmlFile = Get-Content .\config.xml
+    
+    # Accessing elements
+    $symlinkTargetsPath = $xmlFile.configuration.symlinkTargetsPath
+    $ignorePowershellDirectory = $xmlFile.configuration.ignorePowershellDirectory
+    $createCopyOfDirectorys = $xmlFile.configuration.createCopyOfDirectorys
+    $deleteOldDirectorys = $xmlFile.configuration.deleteOldDirectorys
+}
+else {
+    $symlinkTargetsPath = ReadHostTillValidValue -text "Please paste the directory containing the symlink target directorys" -inputType path
+    $ignorePowershellDirectory = ReadHostTillValidValue -text "Should the powershell directory be ignored? (y/n)" -inputType boolean
+    $createCopyOfDirectorys = ReadHostTillValidValue -text "Create copys of old Directorys? (y/n)" -inputType boolean
+    $deleteOldDirectorys = ReadHostTillValidValue -text "Automatically delete the old directorys? (Otherwise you have to delete them yourself.) (y/n)" -inputType boolean
+}
 
 $confirm = ReadHostTillValidValue -text "(y/n)" -inputType boolean -extraWriteHosts { 
     Write-Host "--------------------------------------------------"
@@ -106,7 +123,6 @@ $continue = ReadHostTillValidValue -text "? (y/n)" -inputType boolean -extraWrit
 if (!$continue) {
     Write-Host "No symlinks created"
 
-    CustomReturn
     return
 }
 
@@ -196,4 +212,26 @@ $symlinkTargetNames | ForEach-Object {
     [Void]$(cmd /c mklink /J $directoryPathWithName $symlinkTargetsPathWithName)
 }    
 
-CustomReturn
+if (!$doLoadFromConfig) {
+    $doSaveConfig = ReadHostTillValidValue -text "Save current configuration? Minecraft Instance path is excluded. (y/n)" -inputType boolean
+}
+
+if ($doSaveConfig) {
+    $xmlFile = New-Object System.Xml.XmlTextWriter("config.xml", $null)
+
+    $xmlFile.Formatting = "Indented"
+    $xmlFile.Indentation = 2
+
+    $xmlFile.WriteStartDocument()
+    $xmlFile.WriteStartElement("configuration")
+
+    $xmlFile.WriteElementString("symlinkTargetsPath", $symlinkTargetsPath)
+    $xmlFile.WriteElementString("ignorePowershellDirectory", $ignorePowershellDirectory)
+    $xmlFile.WriteElementString("createCopyOfDirectorys", $createCopyOfDirectorys)
+    $xmlFile.WriteElementString("deleteOldDirectorys", $deleteOldDirectorys)
+
+    $xmlFile.WriteEndElement()
+    $xmlFile.WriteEndDocument()
+    $xmlFile.Flush()
+    $xmlFile.Close()
+}
